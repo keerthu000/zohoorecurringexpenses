@@ -218,17 +218,19 @@
     </div>
   
 
-      <div class="form-group row mt-4" id="vendorSelectionForm">
-        <div class="col-sm-12 col-md-3 col-lg-3 col-form-label"><label>Vendor</label></div>
-        <div class="col-sm-12 col-md-6 col-lg-6">
-        <div class="input-group">
-            <select class="form-control  bg-white text-dark" id="vendor_dropdown" name="vendor" >
-              {% for vendor in vendors %}
-              <option value="{{vendor.pk}}" data-gst-number="{{vendor.gst_number}}" {% if vendor.pk|stringformat:"s" == selected_vendor_id %}selected{% endif %}>
-                {{vendor.vendor_display_name}} 
-              </option>
-            {% endfor %}
-            </select>
+    <div class="form-group row mt-4">
+      <div class="col-sm-12 col-md-3 col-lg-3 col-form-label"><label>Vendor</label></div>
+       <div class="col-sm-12 col-md-6 col-lg-6">
+      <div class="input-group">
+        <select class="form-control bg-white text-dark" id="vendor" name="vendor">
+          {% for vendor in vendors %}
+            <option value="{{vendor.pk}}" data-gst-number="{{vendor.gst_number}}" 
+              {% if vendor.pk == selected_vendor_id %}selected{% endif %}>
+              {{vendor.first_name }} {{ vendor.last_name }} 
+            </option>
+          {% endfor %}
+        </select>
+        
             <div class="input-group-append">
               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#newvendor"  style="height:38px;">Add new vendor</button>
             </div>
@@ -307,8 +309,8 @@
         <div class="col-sm-12 col-md-3 col-lg-3 col-form-label"><label>Customer Name</label></div>
         <div class="col-sm-12 col-md-6 col-lg-6">
         <div class="input-group" style="width:617px;">
-          <select class="form-control" id="customername" name="customername" class="form-control bg-white text-dark" style="margin-left:15px;color:black;">
-            <!-- Existing options -->
+          <select class="form-control bg-white text-dark" id="customername" name="customername" style="margin-left:15px;color:black;">
+            <option value="" selected>Select a customer</option>
           </select>
           <div class="input-group-append">
             <button class="btn btn-primary" type="button"  data-toggle="modal" data-target="#newcustomer" style="height:38px;">Add new customer</button>
@@ -343,7 +345,7 @@
         </div>
         <div class="modal-body" >
           <div class="card p-3 m-3">
-            <form action="" method="post" class="needs-validation" novalidate autocomplete="off" id="vendor-form">
+            <form action="{% url 'add_vendor' %}" method="post" class="needs-validation" novalidate autocomplete="off" id="vendor-form">
               {% csrf_token %}
 
               <div class="row">
@@ -365,7 +367,7 @@
                 </div>
                 <div class="col-md-6 mt-2">
                   <input type="text" class="form-control text-dark bg-light" id="fname" name="firstname" required>
-                </div>
+                </div>firstname
               </div>
               <div class="row">
                 <div class="col-md-3 mt-2">
@@ -920,8 +922,8 @@
       </div>
       <div class="modal-body" style="background: rgb(32, 35, 37);">
         <div class="card p-3 m-3">
-          <form action="{% url 'save_data' %}" method="post" class="needs-validation" novalidate autocomplete="off" id="accountForm">
-            {% csrf_token %}
+          <form action=" " method="post" class="needs-validation" novalidate autocomplete="off" id="accountForm">
+            {% csrf_token  %}
             <div class="form-row">
               <div class="form-group col-md-6">
                 <label for="accountType">Account Type:</label>
@@ -1061,8 +1063,9 @@
       </div>
       <div class="modal-body" style="background: rgb(32, 35, 37);">
         <div class="card p-3 m-3">
-          <form action="" method="post" class="needs-validation" novalidate autocomplete="off" id="modalCustomer">
-    
+          <form action=" " method="post" class="needs-validation" novalidate autocomplete="off" id="addCustomerForm">
+            {% csrf_token %}
+ 
             <div class="row mt-2">
               <div class="col-md-3 mt-2">
                 <label for="">Customer Type</label><br>
@@ -1070,11 +1073,11 @@
               <div class="col-md-6 mt-2">
                 <div class="d-flex">
                   <div class="radio_opt mx-5 mt-2">
-                    <input type="radio" id="business" name="radioCust" value="Business" >
+                    <input type="radio" id="business" name="type" value="Business" >
                     <label for="option1">Business</label>
                   </div>
                   <div class="radio_opt mx-4 mt-2">
-                    <input type="radio" id="individual" name="radioCust" value="Individual" >
+                    <input type="radio" id="individual" name="type" value="Individual" >
                     <label for="option2">Individual</label>
                   </div>
                 </div>
@@ -1315,7 +1318,7 @@
                 <label for="c_open">Opening Balance</label>
               </div>
               <div class="col-md-6 mt-2">
-                <input type="text" class="form-control text-dark bg-light" id="c_open" name="c_open">
+                <input type="number" class="form-control text-dark bg-light" id="c_open" name="c_open">
               </div>       
             </div>
 
@@ -1633,6 +1636,46 @@
 <!--End Cutomer-->
 
 
+
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Fetch customer names using AJAX
+            $.ajax({
+                url: "{% url 'get_customer_names' %}",
+                type: "GET",
+                success: function (data) {
+                    // Populate dropdown with customer names
+                    var select = $("#customername");
+                    $.each(data, function (index, customer) {
+                        select.append(new Option(customer.name, customer.id));
+                    });
+                }
+            });
+        });
+    </script>
+
+<script>
+  // AJAX submission
+  $(document).ready(function () {
+    $("#customerSave").click(function () {
+      $.ajax({
+        type: "POST",
+        url: "{% url 'entr_custmr' %}",
+        data: $("#modalCustomer").serialize(),
+        success: function (response) {
+          // Handle success response (if needed)
+          // Close the modal after successful submission
+          $("#newcustomer").modal("hide");
+        },
+        error: function (error) {
+          // Handle error response (if needed)
+        },
+      });
+    });
+  });
+</script>
 
 
 
