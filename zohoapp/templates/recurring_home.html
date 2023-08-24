@@ -205,13 +205,12 @@
           <div class="col-sm-12 col-md-3 col-lg-3 col-form-label"><label>Vendor</label></div>
           <div class="col-sm-12 col-md-6 col-lg-6">
           <div class="input-group">
-           <select class="form-control  bg-white text-dark" id="vendorSelect" name="vendor" >
-              {% for vendor in vendors %}
-              <option value="{{ vendor.id }}" {% if vendor.id == selected_vendor_id %}selected{% endif %}>
-                  {{ vendor.first_name }} {{ vendor.last_name }}
-              </option>
+            <select class="form-control bg-white text-dark" id="vendorSelect" name="vendor">
+              <option value="" class="text-dark bg-light"></option>
+              {% for v in vendors %}
+                  <option value="{{ v.id }}" class="text-dark bg-light">{{ v.first_name }} {{ v.last_name }}</option>
               {% endfor %}
-             </select>
+          </select>
           
           
             
@@ -518,7 +517,7 @@
                       <label for="v_curn">Currency </label>
                     </div>
                     <div class="col-md-3 mt-2">
-                      <select class="form-control text-dark bg-light" id="v_curn" name="v_curn" required>
+                      <select class="form-control text-dark bg-light" id="v_curn" name="currency" required>
                         <option selected disabled value="">Choose..</option>
                         <option value="INR">INR</option>
                       </select>
@@ -858,54 +857,63 @@
     }
     </script>
 
-    <script>
-      $(document).ready(function() {
-          $("#vendorSave").on("click", function(event) {
-              event.preventDefault();
-              var formData = $("#addVendorForm").serialize();
-      
-              $.ajax({
-                  url: "{% url 'add_vendor' %}", // Replace with actual URL
-                  type: "POST",
-                  data: formData,
-                  success: function(data) {
-                      if (data.success) {
-                          alert("Vendor added successfully!");
-                          $("#addVendorForm")[0].reset();
-                          updateVendorDropdown();
-                      } else {
-                          alert("Vendor addition failed!");
-                      }
-                  },
-                  error: function(error) {
-                      console.log("Error:", error);
-                  }
-              });
-          });
-      
-          function updateVendorDropdown() {
-              var vendorSelect = $("#vendorSelect");
-      
-              $.ajax({
-                  url: "{% url 'get_vendor_list' %}", // Replace with actual URL
-                  type: "GET",
-                  success: function(data) {
-                      vendorSelect.empty();
-                      data.forEach(function(vendor) {
-                          vendorSelect.append("<option value='" + vendor.id + "'>" + vendor.name + "</option>");
-                      });
-                  },
-                  error: function(error) {
-                      console.log("Error:", error);
-                  }
-              });
+    
+    
+   
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $("#vendorSave").on("click", function(event) {
+            event.preventDefault();
+            var formData = $("#addVendorForm").serialize();
+
+            $.ajax({
+                url: "{% url 'add_vendor' %}",
+                type: "POST",
+                data: formData,
+                success: function(data) {
+                    console.log("AJAX Success:", data);
+
+                    if (data.success) {
+                        alert("Vendor added successfully!");
+
+                        // Clear the form fields
+                        $("#addVendorForm")[0].reset();
+
+                        // Update the vendor dropdown list
+                        updateVendorDropdown();
+                    } else {
+                        alert("Vendor addition failed!");
+                    }
+                },
+                error: function(error) {
+                    console.log("AJAX Error:", error);
+                }
+            });
+        });
+
+        // Function to update the vendor dropdown list
+       // Function to update the vendor dropdown list
+function updateVendorDropdown() {
+  var vendorListSelect = $("#vendorSelect");
+
+  $.ajax({
+      url: "{% url 'get_vendor_list' %}", // Change to the actual URL
+      type: "GET",
+      success: function(data) {
+          vendorListSelect.empty();
+          for (var i = 0; i < data.length; i++) {
+              var vendor = data[i];
+              vendorListSelect.append("<option value='" + vendor.id + "'>" + vendor.name + "</option>");
           }
-      
-          updateVendorDropdown(); // Initial update of the vendor dropdown list
-      });
-      </script>
+      },
+      error: function(error) {
+          console.log("Error:", error);
+      }
+  });
+}
 
-
+</script>
 
 
 

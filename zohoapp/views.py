@@ -17,6 +17,7 @@ from datetime import datetime,date, timedelta
 # from xhtml2pdf import pisa
 from django.template.loader import get_template
 # from bs4 import BeautifulSoup
+from django.core import serializers
 import io
 import os
 import json
@@ -701,7 +702,7 @@ def add_vendor(request):
             pan_number=request.POST['v_pan']
             
         source_supply=request.POST['v_sourceofsupply']
-        currency=request.POST['v_curn']
+        currency=request.POST['currency']
         opening_bal=request.POST['v_open']
         payment_terms=request.POST['v_terms']
         bstreet=request.POST['vstreet']
@@ -762,25 +763,37 @@ def add_vendor(request):
         vendor_data.user=udata
         vendors = vendor_table.objects.all()
         vendor_id=vendor_data.id
-        vendor_name = f"{vendor.first_name} {vendor.last_name}"
+        vendor_name = f"{first_name} {last_name}"
+        print(vendor_name)
        
         
         response_data = {
         'success': True,  # Indicate success
         'vendorId': vendor_id,
-        'vendors':vendors,
+        'vendors': serializers.serialize('json', vendors),
         'vendorName': vendor_name,
     }
         return JsonResponse(response_data)
     return render(request, 'recurring_home.html') 
 
+@login_required(login_url='login')
+def get_vendor_list(request):
+    user = User.objects.get(id=request.user.id)
+
+    options = []
+    option_objects = vendor_table.objects.filter(user=user)
+    for option in option_objects:
+        vendor_info = {
+            'id': option.id,
+            'name': f"{option.salutation} {option.first_name} {option.last_name}"
+        }
+        options.append(vendor_info)
+        
+    return JsonResponse(options, safe=False)  # Set safe to False when returning a list
 
 
     
-def get_vendor_list(request):
-    vendors = vendor_table.objects.all()  # Fetch all vendors from the database
-    vendor_list = [{'id': vendor.id, 'name': vendor.name} for vendor in vendors]
-    return JsonResponse(vendor_list, safe=False)
+
 
       
 
@@ -2511,27 +2524,25 @@ def banking_delete(request,id):
 @login_required(login_url='login')
 def recurringhome(request):
     selected_vendor_id = request.POST.get('vendor')
-    vendors = vendor_table.objects.all()
+    vendors = vendor_table.objects.filter(user=request.user)
     selected_vendor = vendor_table.objects.filter(id=selected_vendor_id).first()
-    accounts=Account.objects.all()
+    accounts = Account.objects.all()
     account_types = set(Account.objects.values_list('accountType', flat=True))
     gst_number = selected_vendor.gst_number if selected_vendor else ''
     gst_trt_inp = selected_vendor.gst_trt_inp if selected_vendor else ''
     gstin_inp = selected_vendor.gstin_inp if selected_vendor else ''
     print("Selected Vendor ID:", selected_vendor_id)
+    print('vendors', vendors)
 
-   
     return render(request, 'recurring_home.html', {
-        'vendors': vendors,
+        'vendors': vendors,  # Include the vendors list in the context
         'selected_vendor_id': selected_vendor_id,
         'gst_number': gst_number,
-        'accounts':accounts,
-        'account_types':account_types,
+        'accounts': accounts,
+        'account_types': account_types,
         'gst_trt_inp': gst_trt_inp,
         'gstin_inp': gstin_inp,
-        
     })
-
 
 
 from django.shortcuts import get_object_or_404
