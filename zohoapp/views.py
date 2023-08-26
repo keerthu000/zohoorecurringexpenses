@@ -28,6 +28,7 @@ from django.views.decorators.http import require_POST
 from django.core.exceptions import ValidationError
 
 
+
 def index(request):
 
     return render(request,'index.html')
@@ -770,7 +771,7 @@ def add_vendor(request):
         response_data = {
         'success': True,  # Indicate success
         'vendorId': vendor_id,
-        'vendors': serializers.serialize('json', vendors),
+        
         'vendorName': vendor_name,
     }
         return JsonResponse(response_data)
@@ -785,7 +786,9 @@ def get_vendor_list(request):
     for option in option_objects:
         vendor_info = {
             'id': option.id,
-            'name': f"{option.salutation} {option.first_name} {option.last_name}"
+            'name': f"{option.salutation} {option.first_name} {option.last_name}",
+            'gstTreatment': option.gst_treatment,
+            'gstin' : option.gst_number, 
         }
         options.append(vendor_info)
         
@@ -2523,85 +2526,85 @@ def banking_delete(request,id):
     
 @login_required(login_url='login')
 def recurringhome(request):
-    selected_vendor_id = request.POST.get('vendor')
-    vendors = vendor_table.objects.filter(user=request.user)
-    selected_vendor = vendor_table.objects.filter(id=selected_vendor_id).first()
+    selected_vendor_id = request.GET.get('vendor')
+    vendors = vendor_table.objects.all()
     accounts = Account.objects.all()
     account_types = set(Account.objects.values_list('accountType', flat=True))
+    
+    selected_vendor = vendor_table.objects.filter(id=selected_vendor_id).first()
     gst_number = selected_vendor.gst_number if selected_vendor else ''
-    gst_trt_inp = selected_vendor.gst_trt_inp if selected_vendor else ''
-    gstin_inp = selected_vendor.gstin_inp if selected_vendor else ''
-    print("Selected Vendor ID:", selected_vendor_id)
-    print('vendors', vendors)
-
+    customers=customer.objects.all()
+   
+    print('vendor',vendors)
     return render(request, 'recurring_home.html', {
-        'vendors': vendors,  # Include the vendors list in the context
+        'vendors': vendors,
         'selected_vendor_id': selected_vendor_id,
-        'gst_number': gst_number,
+        
         'accounts': accounts,
         'account_types': account_types,
-        'gst_trt_inp': gst_trt_inp,
-        'gstin_inp': gstin_inp,
+        'gst_number':gst_number,
+        'customers':customers,
     })
-
-
-from django.shortcuts import get_object_or_404
-from .models import Expense, vendor_table
-@login_required(login_url='login')
 def add_expense(request):
-    print("add_expense view triggered")
     if request.method == 'POST':
-        try:
-            profile_name = request.POST['profile_name']
-            repeat_every = request.POST['repeat_every']
-            start_date = request.POST['start_date']
-            never_expire = request.POST.get('never_expire')  # Use get() for checkboxes
-            print(never_expire)
-            if never_expire:
-                ends_on = None
-            else:
-                ends_on = request.POST['ends_on']
-            
-            expense_account = request.POST['expense_account']
-            expense_type = request.POST['expense_type']
-            hsn = request.POST['goods_label']
-            sac = request.POST['services_label']
-            amount = request.POST['amount']
-            currency = request.POST['currency']
-            paidthrough = request.POST['paidthrough']
-            vendor_id = request.POST['vendor']
-            vendor = get_object_or_404(vendor_table, pk=vendor_id)
-            gst = request.POST['gst']
-            destination = request.POST['destination']
-            tax = request.POST['tax']
-            notes = request.POST['notes']
-            customer_id = request.POST['customername']
-            customer_obj = get_object_or_404(customer, pk=customer_id)  # Make sure 'customer' model is imported
-            
-            print("Extracted values from request:")
-            print("Profile Name:", profile_name)
-            # Print other fields as well
-            
-            expense = Expense(
-                profile_name=profile_name, repeat_every=repeat_every, start_date=start_date,
-                ends_on=ends_on, expense_account=expense_account, expense_type=expense_type,
-                hsn=hsn, sac=sac, amount=amount, currency=currency, paidthrough=paidthrough,
-                vendor=vendor, gst=gst, customername=customer_obj.customerName,
-                notes=notes, tax=tax, destination=destination
-            )
-            expense.save()
-            print("Expense object saved successfully:", expense)
-            return redirect('recurringbase')
-        except Exception as e:
-            print("An error occurred:", str(e))
-        
+        # Retrieve form data
+        profile_name = request.POST['profile_name']
+        repeat_every = request.POST['repeat_every']
+        start_date = request.POST['start_date']
+        account_id = request.POST.get('expense_account')
+        expense_account = get_object_or_404(Account, pk=account_id)
+        expense_type = request.POST['expense_type']
+          
+        hsn = request.POST['goods_label']
+        sac = request.POST['services_label']
+        amount = request.POST['amount']
+        currency = request.POST['currency']
+        paidthrough = request.POST['paidthrough']
+        vendor_id = request.POST['vendor']
+        vendor = get_object_or_404(vendor_table, pk=vendor_id)
+        gst_treatment=request.POST['gst_trt_inp']
+        gst = request.POST['gstin_inp']
+        destination = request.POST['destination']
+        tax = request.POST['tax']
+        notes = request.POST['notes']
+        customer_id = request.POST['customername']
+        customer_obj = get_object_or_404(customer, pk=customer_id)
+
+        # Handle the ends_on field
+        ends_on = request.POST.get('ends_on')
+        never_expire = request.POST.get('never_expire') == 'on'
+
+        if never_expire:
+            ends_on = "Never expire"
+
+        # Create and save the Expense instance
+        expense = Expense(
+            profile_name=profile_name,
+            repeat_every=repeat_every,
+            start_date=start_date,
+            ends_on=ends_on,
+            expense_account=expense_account,
+            expense_type=expense_type,
+            hsn=hsn,
+            sac=sac,
+            amount=amount,
+            currency=currency,
+            paidthrough=paidthrough,
+            vendor=vendor,
+            gst_treatment=gst_treatment,
+            gst=gst,
+            destination=destination,
+            tax=tax,
+            notes=notes,
+            customername=f"{customer_obj.Firstname} {customer_obj.Lastname}",
+            activation_tag="active" # Set the activation_tag to "active"
+        )
+        expense.save()
+
+        return redirect('recurringbase')
     else:
         vendors = vendor_table.objects.all()
         return render(request, 'add_expense.html', {'vendors': vendors})
-    
-    return HttpResponse(" recurringbase")
-    
-
 
 
 @login_required(login_url='login')
@@ -2679,7 +2682,7 @@ def save_data(request):
         account_code = request.POST.get('accountCode')
         description = request.POST.get('description')
 
-        account = Account(accountType=account_type, accountName=account_name, accountCode=account_code, description=description)
+        account = Account(accountType=account_type, accountName=account_name,  description=description)
         account.save()
         acc_id = account.id
 

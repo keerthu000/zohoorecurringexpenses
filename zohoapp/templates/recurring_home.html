@@ -111,30 +111,19 @@
         <div class="col-sm-12 col-md-3 col-lg-3 col-form-label"><label>Expence Account</label></div>
         <div class="col-sm-12 col-md-6 col-lg-6">
           <div class="input-group">
-            <select class="form-control bg-white text-dark" id="expense_account" name="expense_account" >
-              
-                {% comment %} <option value="" disabled class="btn btn text-dark   highlight-account-type"><b>Other Current Asset</b></option>
-                <option value="Advance Tax" >Advance Tax</option>
-                <option value="Employee Advance" >Employee Advance </option>
-                <option value="" disabled class="btn btn text-dark   highlight-account-type"><b>Fixed Asset</b></option>
-                <option value="Furniture and Equipments" >Furniture and Equipments</option>    
-                <option value="" disabled class="btn btn text-dark   highlight-account-type"><b>Other Current Liablity</b></option>                    
-                <option value="Employee Reimbursements">Employee Reimbursements</option>
-              
-                <option value="" disabled class="btn btn text-dark   highlight-account-type"><b>Expense</b></option>
-                <option value="Advertising and Marketing" >Advertising and Marketing</option>
-                <option value="Automobile Expense" >Automobile Expense</option> {% endcomment %}
-                
-                {% for account_type in account_types %}
-                <option value="" disabled class="btn btn text-dark   highlight-account-type"><b>{{ account_type }}</b></option>
-                {% for account in accounts %}
-                  {% if account.accountType == account_type %}
-                <option value="{{account.id}}">{{ account.accountName }}</option>
-                {% endif %}
-                {% endfor %}
-                {% endfor %}
+            <select class="form-control bg-white text-dark" id="expense_account" name="expense_account">
+              <!-- Existing options and comment tags -->
+              {% for account_type in account_types %}
+                <optgroup label="{{ account_type }}">
+                  {% for account in accounts %}
+                    {% if account.accountType == account_type %}
+                      <option value="{{ account.id }}">{{ account.accountName }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </optgroup>
+              {% endfor %}
             </select>
-
+            
             <div class="input-group-append">
               <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#newAccountModal" class="text-capitalize"  style="height:38px;">New Account</button>
             </div>
@@ -205,13 +194,12 @@
           <div class="col-sm-12 col-md-3 col-lg-3 col-form-label"><label>Vendor</label></div>
           <div class="col-sm-12 col-md-6 col-lg-6">
           <div class="input-group">
-            <select class="form-control bg-white text-dark" id="vendorSelect" name="vendor">
+            <select name="vendor" id="vendorSelect" class="form-control text-dark bg-light">
               <option value="" class="text-dark bg-light"></option>
               {% for v in vendors %}
                   <option value="{{ v.id }}" class="text-dark bg-light">{{ v.first_name }} {{ v.last_name }}</option>
               {% endfor %}
           </select>
-          
           
             
                 <div class="input-group-append">
@@ -310,6 +298,9 @@
         </div>
     </form>
     </div> 
+
+
+
       <div class="modal fade" id="newvendor" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl" role="document" >
           <div class="modal-content" style="background: rgb(32, 35, 37);border-radius: 20px;">
@@ -440,19 +431,22 @@
                         <option value="Demed Exports">Demed Exports (Supply of woods to an exports oriented unit or againsed advanced authorization or export promotion capital woods)</option>
                         <option value="Tax Deductor">Tax Deductor (State of central gov,government agencies or local authority)</option>
                         <option value="SEZ Developer">SEZ Developer (A person or organization who owns atleast 26% eqaulity in creating business units in special economic zone)</option>
-                      </select>
-                    </div>       
+                      </select> <div class="row" id="gstinRow">
+                      
+
+                    </div> 
+                          
                   </div>
-    
-                  <div class="row" id="gstinRow" style="display: none;">
+                  <div class="row" id="gstinRow" >
                     <div class="col-md-3 mt-2">
-                      <label for="v_gstin" style="color:rgb(190, 88, 88);margin-top:25px;">GSTIN</label>
+                      <label for="v_gstin" style="color:rgb(190, 88, 88);margin-top:15px;">GSTIN</label>
                     </div>
                     <div class="col-md-6 mt-2">
-                      <input type="text" class="form-control text-dark bg-light" id="v_gstin" name="v_gstin" placeholder="29APPCK7465F1Z1" style="margin-left:270px;margin-top:-30px;">
+                      <input type="text" class="form-control text-dark bg-light" id="v_gstin" name="v_gstin" placeholder="29APPCK7465F1Z1" style="margin-left:10px;margin-top:-5px;width:480px;">
                     </div>
                   </div>
     
+                 
                   <div class="row">
                     <div class="col-md-3 mt-2">
                       <label for="v_pan">PAN Number</label>
@@ -827,6 +821,83 @@
       </div>  
   <!-- end modal -->
   <script>
+    function toggleGSTINField() {
+      const gstTreatmentSelect = document.getElementById('v_gsttype');
+      const gstinRow = document.getElementById('gstinRow');
+  
+      if (gstTreatmentSelect.value === 'Registered Business - Regular' || gstTreatmentSelect.value === 'Registered Business - Composition') {
+        gstinRow.style.display = 'block';
+      } else {
+        gstinRow.style.display = 'none';
+      }
+    }
+  </script>
+
+
+
+  
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $("#vendorSave").on("click", function(event) {
+            event.preventDefault();
+            var formData = $("#addVendorForm").serialize();
+
+            $.ajax({
+                url: "{% url 'add_vendor' %}",
+                type: "POST",
+                data: formData,
+                success: function(data) {
+                    console.log("AJAX Success:", data);
+
+                    if (data.success) {
+                        alert("Vendor added successfully!");
+
+                        // Clear the form fields
+                        $("#addVendorForm")[0].reset();
+
+                        // Update the vendor dropdown list
+                        updateVendorDropdown(data); // Pass the response data
+                    } else {
+                        alert("Vendor addition failed!");
+                    }
+                },
+                error: function(error) {
+                    console.log("AJAX Error:", error);
+                }
+            });
+        });
+
+        function updateVendorDropdown(data) { // Accept the data parameter
+            var vendorListSelect = $("#vendorSelect");
+        
+            $.ajax({
+                url: "{% url 'get_vendor_list' %}",
+                type: "GET",
+                success: function(responseData) {
+                    vendorListSelect.empty();
+                    for (var i = 0; i < responseData.length; i++) {
+                        var vendor = responseData[i];
+                        var option = $("<option>")
+                            .val(vendor.id)
+                            .text(vendor.name);
+                        vendorListSelect.append(option);
+        
+                        // Check if this vendor matches the newly added one
+                        if (vendor.id === data.vendorId) {
+                            option.attr("selected", "selected");
+                        }
+                    }
+                },
+                error: function(error) {
+                    console.log("Error:", error);
+                }
+            });
+        } // <-- Closing curly brace for updateVendorDropdown function
+    }); // <-- Closing curly brace for $(document).ready(function() {
+</script>
+
+  <script>
     function addressSame() {
         const billingStreet = document.getElementById("vstreet").value;
         const billingCity = document.getElementById("vcity").value;
@@ -858,67 +929,8 @@
     </script>
 
     
-    
    
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function() {
-        $("#vendorSave").on("click", function(event) {
-            event.preventDefault();
-            var formData = $("#addVendorForm").serialize();
-
-            $.ajax({
-                url: "{% url 'add_vendor' %}",
-                type: "POST",
-                data: formData,
-                success: function(data) {
-                    console.log("AJAX Success:", data);
-
-                    if (data.success) {
-                        alert("Vendor added successfully!");
-
-                        // Clear the form fields
-                        $("#addVendorForm")[0].reset();
-
-                        // Update the vendor dropdown list
-                        updateVendorDropdown();
-                    } else {
-                        alert("Vendor addition failed!");
-                    }
-                },
-                error: function(error) {
-                    console.log("AJAX Error:", error);
-                }
-            });
-        });
-
-        // Function to update the vendor dropdown list
-       // Function to update the vendor dropdown list
-function updateVendorDropdown() {
-  var vendorListSelect = $("#vendorSelect");
-
-  $.ajax({
-      url: "{% url 'get_vendor_list' %}", // Change to the actual URL
-      type: "GET",
-      success: function(data) {
-          vendorListSelect.empty();
-          for (var i = 0; i < data.length; i++) {
-              var vendor = data[i];
-              vendorListSelect.append("<option value='" + vendor.id + "'>" + vendor.name + "</option>");
-          }
-      },
-      error: function(error) {
-          console.log("Error:", error);
-      }
-  });
-}
-
-</script>
-
-
-
-
-    <!--Account section-->
+   
 <div class="modal fade" id="newAccountModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="false">
   <!-- Modal content here -->
   <div class="modal-dialog modal-xl">
@@ -974,7 +986,7 @@ function updateVendorDropdown() {
             
             <div class="form-row mt-3">
               <div class="col-md-6" >
-                <button type="submit" class="btn btn-primary" style="margin-left:356px;">Save and Select</button>
+                <button type="submit" class="btn btn-primary" style="margin-left:356px;" id="accountSave">Save and Select</button>
               </div>
               <div class="col-md-6">
                 <button type="button" class="close btn btn-secondary" id="cancelButton"   data-dismiss="modal" aria-label="Close" style="height:34.5px;">Cancel</button>
@@ -986,68 +998,64 @@ function updateVendorDropdown() {
     </div>
   </div>
 </div>
-<!--end account modal-->
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const newAccountModal = document.getElementById("newAccountModal");
-    const expenseAccountDropdown = document.getElementById("expense_account");
+$(document).ready(function() {
+  $("#accountForm").on("submit", function(event) {
+    event.preventDefault();
+    var formData = new FormData($(this)[0]);
 
-    // Handle the form submission
-    function addAccount() {
-      const formData = new FormData(document.getElementById("accountForm"));
+    $.ajax({
+      url: "{% url 'save_data' %}",  // Replace with your actual URL
+      type: "POST",
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(response) {
+        // Update the dropdown options
+        updateDropdown(response);
 
-      $.ajax({
-        url: "{% url 'save_data' %}",
-        type: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function (response) {
-          // Update the dropdown options
-          updateDropdown(response);
+        // Clear the form fields
+        $("#accountForm")[0].reset();
 
-          // Manually close the modal
-          newAccountModal.style.display = "none";
-          document.body.classList.remove("modal-open");
-        },
-        error: function (error) {
-          console.log(error);
-        }
-      });
-    }
-
-    // Update dropdown options with the new account
-    function updateDropdown(response) {
-      const accountType = response.account_type;
-      const accountName = response.account_name;
-      const accountId = response.acc_id;
-
-      // Find the appropriate position to insert the new option
-      const newOption = document.createElement("option");
-      newOption.value = accountId;
-      newOption.text = accountName;
-
-      let foundAccountType = false;
-      for (const option of expenseAccountDropdown.options) {
-        if (option.disabled && option.innerText === accountType) {
-          foundAccountType = true;
-        } else if (foundAccountType && !option.disabled) {
-          expenseAccountDropdown.insertBefore(newOption, option);
-          break;
-        }
+        // Close the modal
+        $("#newAccountModal").modal("hide");
+      },
+      error: function(error) {
+        console.log("AJAX error:", error);
       }
-
-      // Select the new option
-      newOption.selected = true;
-    }
-
-    // Attach event listener to the form submission
-    document.getElementById("accountForm").addEventListener("submit", function (event) {
-      event.preventDefault(); // Prevent default form submission
-      addAccount(); // Call the addAccount function
     });
   });
+
+  function updateDropdown(response) {
+    var expenseAccountDropdown = $("#expense_account");
+    var accountType = response.account_type;
+    var accountName = response.account_name;
+    var accountId = response.acc_id;
+
+    // Find or create the <optgroup> for the account type
+    var optgroup = expenseAccountDropdown.find("optgroup[label='" + accountType + "']");
+    if (optgroup.length === 0) {
+      optgroup = $("<optgroup>").attr("label", accountType);
+      expenseAccountDropdown.append(optgroup);
+    }
+
+    // Create a new option element
+    var newOption = $("<option>")
+      .val(accountId)
+      .text(accountName);
+
+    // Append the new option to the optgroup
+    optgroup.append(newOption);
+  }
+});
 </script>
+
+
+
+
 <!--Add Newcustomer -->
 <div class="modal fade" id="newcustomer">
   <div class="modal-dialog modal-xl">
@@ -1747,9 +1755,9 @@ function updateVendorDropdown() {
 
 <script>
   function toggleTextBox() {
-    var gstTreatment = document.getElementById("gst").value;
+    var gstTreatment = document.getElementById("gst_trt_inp").value;
     var textboxContainer = document.getElementById("textboxContainer");
-    var textbox = document.getElementById("textbox");
+    var textbox = document.getElementById("gstin_inp");
 
     if (gstTreatment !== "Unregistered Business-not Registered under GST") {
       textboxContainer.style.display = "block";
@@ -1761,18 +1769,43 @@ function updateVendorDropdown() {
   }
 
   function getGstNumber() {
-    var vendorSelect = document.getElementById("vendor");
+    var vendorSelect = document.getElementById("vendorSelect");
     var selectedVendorId = vendorSelect.value;
     var selectedVendorOption = vendorSelect.options[vendorSelect.selectedIndex];
     var gstNumber = selectedVendorOption.getAttribute("data-gst-number");
-    return gstNumber;
+    return gstNumber || ""; // Return an empty string if GST number is undefined
   }
 
-  function updateGstNumber() {
-    var textbox = document.getElementById("textbox");
-    textbox.value = getGstNumber();
-  }
+  // Call toggleTextBox initially to set the initial state of the textbox
+  toggleTextBox();
 </script>
+<script>
+  function toggleTextBox() {
+    var gstTreatment = document.getElementById("gst_trt_inp").value;
+    var textboxContainer = document.getElementById("textboxContainer");
+    var textbox = document.getElementById("gstin_inp");
+
+    if (gstTreatment !== "Unregistered Business-not Registered under GST") {
+      textboxContainer.style.display = "block";
+      textbox.value = getGstNumber();
+    } else {
+      textboxContainer.style.display = "none";
+      textbox.value = "";
+    }
+  }
+
+  function getGstNumber() {
+    var vendorSelect = document.getElementById("vendorSelect");
+    var selectedVendorId = vendorSelect.value;
+    var selectedVendorOption = vendorSelect.options[vendorSelect.selectedIndex];
+    var gstNumber = selectedVendorOption.getAttribute("data-gst-number");
+    return gstNumber || ""; // Return an empty string if GST number is undefined
+  }
+
+  // Call toggleTextBox initially to set the initial state of the textbox
+  toggleTextBox();
+</script>
+
 
 <script>
   function validateHSN(input) {
