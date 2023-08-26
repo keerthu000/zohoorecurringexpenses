@@ -694,13 +694,8 @@ def add_vendor(request):
         designation=request.POST['v_desg']
         department=request.POST['v_dpt']
         gst_treatment=request.POST['v_gsttype']
-        x=request.POST['v_gsttype']
-        if x=="Unregistered Business-not Registered under GST":
-            pan_number=request.POST['pan_number']
-            gst_number="null"
-        else:
-            gst_number=request.POST['v_gstin']
-            pan_number=request.POST['v_pan']
+        
+        pan_number=request.POST['v_pan']
             
         source_supply=request.POST['v_sourceofsupply']
         currency=request.POST['currency']
@@ -738,7 +733,7 @@ def add_vendor(request):
                                  department=department,
                                  gst_treatment=gst_treatment,
                                  pan_number=pan_number,
-                                 gst_number=gst_number,
+                                 
                                  source_supply=source_supply,
                                  currency=currency,
                                  opening_bal=opening_bal,
@@ -763,19 +758,22 @@ def add_vendor(request):
         udata=User.objects.get(id=user_id)
         vendor_data.user=udata
         vendors = vendor_table.objects.all()
-        vendor_id=vendor_data.id
-        vendor_name = f"{first_name} {last_name}"
-        print(vendor_name)
+        vendorname=f"{vendor_data.first_name} {vendor_data.last_name}"
+       
+        
+        
        
         
         response_data = {
         'success': True,  # Indicate success
-        'vendorId': vendor_id,
+        'vendorId': vendor_data.id,
         
-        'vendorName': vendor_name,
+        'vendorName':vendorname,
     }
         return JsonResponse(response_data)
     return render(request, 'recurring_home.html') 
+
+
 
 @login_required(login_url='login')
 def get_vendor_list(request):
@@ -788,15 +786,19 @@ def get_vendor_list(request):
             'id': option.id,
             'name': f"{option.salutation} {option.first_name} {option.last_name}",
             'gstTreatment': option.gst_treatment,
-            'gstin' : option.gst_number, 
+            
         }
         options.append(vendor_info)
-        
-    return JsonResponse(options, safe=False)  # Set safe to False when returning a list
+
+    return JsonResponse(options, safe=False)
+ # Set safe to False when returning a list
 
 
-    
-
+def get_vendor_data(request):
+    vendor_id = request.GET.get('vendor')
+    vendor_data = list(vendor_table.objects.filter(id=vendor_id).values('gst_treatment'))
+    print('vendor data',vendor_data)
+    return JsonResponse(vendor_data, safe=False)
 
       
 
@@ -2532,7 +2534,7 @@ def recurringhome(request):
     account_types = set(Account.objects.values_list('accountType', flat=True))
     
     selected_vendor = vendor_table.objects.filter(id=selected_vendor_id).first()
-    gst_number = selected_vendor.gst_number if selected_vendor else ''
+    gst_treatment = selected_vendor.gst_treatment if selected_vendor else ''
     customers=customer.objects.all()
    
     print('vendor',vendors)
@@ -2542,7 +2544,7 @@ def recurringhome(request):
         
         'accounts': accounts,
         'account_types': account_types,
-        'gst_number':gst_number,
+        'gst_treatment':gst_treatment,
         'customers':customers,
     })
 def add_expense(request):
@@ -7047,4 +7049,4 @@ def payment_delete_details(request):
     payment_id = request.GET.get('payment_id')
     payment = get_object_or_404(payment_made_items,id=payment_id)
     payment.delete()
-    return redirect('paymentmethod')
+    return redirect('paymentmethod')    
