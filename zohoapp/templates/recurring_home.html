@@ -102,8 +102,8 @@
           </div>
           <div style="margin-left:318px;">
             <div class="form-check">
-                <input type="checkbox" id="never_expire" name="never_expire" class="form-check-input" {% if never_expire %}checked{% endif %}>
-                <label class="form-check-label" for="never_expire">Never Expire</label>
+              <input type="checkbox" id="never-expire-checkbox" onchange="toggleDateInput()" />
+              <label for="never-expire-checkbox" style="color: #909091;" name="neverExp">Never Expires</label>
               </div>
         </div>
       </div>
@@ -197,7 +197,8 @@
             <select name="vendor" id="vendorSelect" class="form-control text-dark bg-light">
               <option value="" class="text-dark bg-light"></option>
               {% for v in vendors %}
-                  <option value="{{ v.id }}" class="text-dark bg-light">{{ v.first_name }} {{ v.last_name }}</option>
+                 
+                  <option value="{{ v.id }}"  data-gst="{{ v.gst_treatment }}">{{ v.first_name }} {{ v.last_name }}</option>
               {% endfor %}
           </select>
           
@@ -213,9 +214,8 @@
           <div class="form-group row mt-4">
             <div class="col-sm-12 col-md-3 col-lg-3 col-form-label"><label>GST Treatment</label></div>
             <div class="col-sm-12 col-md-6 col-lg-6">
-              <select name="gst_trt_inp" id="gst_trt_inp" class="form-control  bg-white text-dark" style="margin-left: 6px; width: 602px;color:black;">
-                <option value="" selected></option>
-              </select><br>
+              <input type="text" name="gst_trt_inp" id="gst_trt_inp" class="form-control  bg-white text-dark" style="margin-left: 6px; width: 602px;color:black;">
+                
           <div id="textboxContainer" style="display: none;">
             <div class="col-sm-12 col-md-3 col-lg-3 col-form-label"><label>Vendor GSTIN</label></div>
             
@@ -292,49 +292,52 @@
             <button type="button" class="btn btn-secondary" onclick="window.location.href='{% url 'recurringbase' %}'" style="color:orangered;">Cancel</button>
         </div>
     </form>
-    </div> 
+    </div>
     
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <script>
-      $(document).ready(function() {
-          // When the page loads, populate the GST treatment dropdown based on the selected vendor
-          updateGSTTreatment();
+      document.addEventListener('DOMContentLoaded', function() {
+          // Get references to the select dropdown and input field
+          var vendorSelect = document.getElementById('vendorSelect');
+          var GSTinput = document.getElementById('gst_trt_inp');
       
-          // When the vendor selection changes, update the GST treatment dropdown
-          $("#vendorSelect").change(function() {
-              updateGSTTreatment();
+          // Get the initial GST value from the input field
+          var initialGST = GSTinput.value;
+      
+          // Listen for the change event on the vendor select dropdown
+          vendorSelect.addEventListener('change', function() {
+              // Get the selected option
+              var selectedOption = vendorSelect.options[vendorSelect.selectedIndex];
+              
+              // Get the GST value from the selected option's data-gst attribute
+              var gst = selectedOption.getAttribute('data-gst') || initialGST;
+      
+              // Set the GST input field's value
+              GSTinput.value = gst;
           });
-      
-          // Function to update the GST treatment dropdown
-          function updateGSTTreatment() {
-              var selectedVendorId = $("#vendorSelect").val();
-      
-              // Make an AJAX request to fetch the corresponding GST treatment for the selected vendor
-              $.ajax({
-                  url: "/get_vendor_data",  // Replace with the actual URL to fetch GST treatment
-                  data: { vendorId: selectedVendorId },
-                  success: function(response) {
-                      // Assuming the response is a JSON object with a 'gst_treatment' property
-                      var gstTreatment = response.gst_treatment;
-      
-                      // Clear existing options and add the new option
-                      $("#gst_trt_inp").empty();
-                      if (gstTreatment) {
-                          $("#gst_trt_inp").append($('<option>', {
-                              value: gstTreatment,
-                              text: gstTreatment,
-                              selected: true
-                          }));
-                      }
-                  },
-                  error: function() {
-                      console.log("Error fetching GST treatment.");
-                  }
-              });
-          }
       });
       </script>
+      
+    <script>
+      function toggleDateInput() {
+        var checkbox = document.getElementById("never-expire-checkbox");
+        var dateInput = document.getElementById("ends_on");
+        
+        if (checkbox.checked) {
+            dateInput.disabled = true;
+           
+           // $("#terms").val("recpt");
+        } 
+        else {
+            dateInput.disabled = false;
+        }
+    }
+  
+    </script>
+      
+      
+      
+      
+      
       
 
 
