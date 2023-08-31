@@ -48,47 +48,48 @@
         }
     }
 </style>
-<div class="fixed-top" style="top: 8rem; margin-left: 8rem;">
+<div class="fixed-top" style="top: 9rem; margin-left: 8rem;">
     <div style="height: 600px; overflow-y: scroll;">
-        <input type="text"  id="searchInput" class="form-control bg-dark" placeholder="Search Items..." style="margin-top: 30px; width:25%;margin-left:9p8px;">
-        <div class="btn-group" role="group"  style="margin-left: 58rem;margin-top:-1rem;display:inline-flex;width:5rem">
-            <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              Filter
-            </button>
-            <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-              <a class="dropdown-item" href="#"  data-sort="name">Name</a>
-              <a class="dropdown-item" href="#" data-sort="stock">Stock on inventory</a>
-              <a class="dropdown-item" href="#" data-sort="all">All</a>
-            </div>
-          </div>
+        <h1 style="margin-left:90px;">All Profiles</h1>
+        <input type="text"  id="searchInput" class="form-control bg-dark" placeholder="Search Items..." style="margin-top: 20px; width:25%;margin-left:90px;">
+    
         <div class="button-container">
-            <button type="button" class="btn btn-success ml-auto" style="width: 100px; margin-right:-700px;margin-top: -15px;" onclick="window.location.href='{% url 'recurringhome' %}'">+New</button>
+            <button type="button" class="btn btn-success ml-auto" style="width: 100px; margin-left:850px;margin-top:5px;" onclick="window.location.href='{% url 'recurringhome' %}'">+New</button>
+          
         </div><br><br>
         <div class="table-container">
             <table class="table" id="dataTable">
                 <thead>
                     <tr style="color:white;">
-                        <th>Profile Name</th>
-                        <th>Amount</th>
-                        <th>Vendor</th>
-                        <th>Expense Type</th>
-                        <th>Start Date</th>
-                        <th>Ends On</th>
-                        <th>Notes</th>
+                        <th>Profile Name<i class="fa fa-filter "></i></th>
+                        <th>Amount<i class="fa fa-filter "></th>
+                        <th>Vendor<i class="fa fa-filter "></th>
+                        <th>Vendor GST Treatment<i class="fa fa-filter "></th>
+                        <th>Expense Type<i class="fa fa-filter "></th>
+                        <th>Start Date<i class="fa fa-filter "></th>
+                        <th>Ends On<i class="fa fa-filter "></th>
+                        <th>Notes<i class="fa fa-filter "></th>
+                        <th>Customer<i class="fa fa-filter "></th>
+                        {% comment %} <th>Customer MailId<i class="fa fa-filter "></th> {% endcomment %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for e in expenses %}
+                   
                     <tr style="color:white;">
                         <td><a href="{% url 'show_recurring' e.id %}">{{ e.profile_name }}</a></td>
                         <td>{{ e.amount }}</td>
                         <td>{{ e.vendor.first_name }}{{e.vendor.last_name}}</td>
+                        <td>{{ e.gst_treatment}}</td>
                         <td>{{ e.expense_type }}</td>
                         <td>{{ e.start_date }}</td>
                         <td>{{ e.ends_on }}</td>
                         <td>{{ e.notes }}</td>
+                        <td>{{ e.customername}}</td>
+                        {% comment %} <td>{{ e.customer_obj.customerEmail}}</td> {% endcomment %}
                     </tr>
                     {% endfor %}
+                   
                 </tbody>
             </table>
         </div><br><br>
@@ -97,6 +98,40 @@
         <img src="{% static 'images/flowchart.png' %}" alt="Flowchart Image">
     </div>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $("th").click(function() {
+            var table = $(this).parents('table').eq(0);
+            var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()));
+            this.asc = !this.asc;
+            if (!this.asc) {
+                rows = rows.reverse();
+            }
+            for (var i = 0; i < rows.length; i++) {
+                table.append(rows[i]);
+            }
+        });
+    
+        function comparer(index) {
+            return function(a, b) {
+                var valA = getCellValue(a, index);
+                var valB = getCellValue(b, index);
+                return $.isNumeric(valA) && $.isNumeric(valB) ?
+                    valA - valB : valA.localeCompare(valB);
+            };
+        }
+    
+        function getCellValue(row, index) {
+            return $(row).children('td').eq(index).text();
+        }
+    });
+    </script>
+    
+    
+
+        
+   
 <script>
     // Function to handle the search
     function searchTable() {

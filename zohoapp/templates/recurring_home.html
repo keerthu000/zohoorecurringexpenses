@@ -57,7 +57,9 @@
   
   </style>
   {% comment %} <div  style="margin-top:6rem;   margin-left: 8rem;" > {% endcomment %}
+    <h2>New Recurring Expenses</h2>
     <div style="height: 600px; overflow-y: scroll;overflow-x: clip;"> 
+     
       <form action="{% url 'add_expense' %}" method="post" id="expenseForm">
         {% csrf_token %}
         
