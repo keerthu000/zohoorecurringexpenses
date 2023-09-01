@@ -416,8 +416,8 @@
                                 </div>
                                 <div class="position-relative">
                                     <p>Bill Date : &nbsp <span style="color: black;">{{expense.start_date|date:'d-m-Y'}}</span></p>
-                                    <p>Due Date : &nbsp <span style="color: black;">{{expense.end_date|date:'d-m-Y'}}</span></p>
-                                    <p>Term : &nbsp <span style="color: black;">NET {{expense.payment_terms}}</span></p> 
+                                    <p>Due Date : &nbsp <span style="color: black;">{{expense.ends_on|date:'d-m-Y'}}</span></p>
+                                    {% comment %} <p>Term : &nbsp <span style="color: black;">NET {{expense.payment_terms}}</span></p>  {% endcomment %}
                                 </div>
                             </div>
                         </section>
@@ -434,9 +434,10 @@
                             <div class="col-5">
                                 <p style=" font-size: 18px; font-style: italic; font-weight: 700;">Bill To,</p>
                                 <h6  class="mx-3 text-capitalize" style="color: black; ">{{ vendor.salutation}} {{vendor.first_name}} {{ vendor.last_name}}</h6>
-                                <p class="address col-6 mx-4 p-2" style="margin-left: -14px;">{{vendor.baddress}}<br>
+                                <p class="address col-6 mx-4 p-2" style="margin-left: -14px;">{{vendor.bstreet}}<br>
                                     {{vendor.bcity}}<br>
                                     {{vendor.bstate}}<br> 
+                                    {{vendor.bpin}}<br> 
                                 </p>
                             </div>
                             <div class="col-1"></div>
@@ -449,10 +450,10 @@
 
                             <div class="col-5">
                                 <p style=" font-size: 18px; font-style: italic; font-weight: 700;">Deliver To,</p>
-                                <h6  class="mx-2 text-capitalize" style="color: black;">{{customer.customerName}}</h6>
-                                <p class="address col-6 mx-3 p-2" style="margin-left: -14px;">{{customer.Address1}} <br>
-                                    {{customer.Address2}}<br>
-                                    {{customer.city}}<br>
+                                <h6  class="mx-2 text-capitalize" style="color: black;">{{customer.Firstname}}{{customer.Lastname}}</h6>
+                                <p class="address col-6 mx-3 p-2" style="margin-left: -14px;">{{customer.bAddress1}} <br>
+                                    {{customer.bAddress2}}<br>
+                                    {{customer.bcity}}<br>
                                     {{customer.state}}<br>
 
                                     
@@ -469,27 +470,27 @@
                         <thead style="background-color:burlywood; color: black;">
                             <tr>
                                 <td>#</td>
-                                <td>Item</td>
-                                <td>Account</td>
-                                <td>Rate</td>
-                                <td>Quantity</td>
-                                <td>Discount</td>
+                                <td>Profile Name</td>
+                                <td>Start Date</td>
+                                <td>Ends Date</td>
+                                <td>Vendor</td>
+                                <td>GST Number</td>
                                 <td>Tax</td>
-                                <td>Total</td>
+                                <td>Amount</td>
                             </tr>
                         </thead>
                         <tbody style=":hover{color: #ddd; background-color: transparent;}">
 
-                            {% for b in bill_item %}
+                            {% for b in expenses %}
                             <tr >
                                 <td>{{ forloop.counter }}</td>
-                                <td>{{b.item}}</td>
-                                <td>{{b.account}} </td>
-                                <td>{{b.rate}}</td>
-                                <td>{{b.quantity}}</td>
-                                <td>{{b.discount}}</td>
-                                <td>{{b.tax}} %</td>
-                                <td>{{b.amount|floatformat:2}}</td>
+                                <td>{{b.profile_name}}</td>
+                                <td>{{b.start_date}} </td>
+                                <td>{{b.ends_on}}</td>
+                                <td>{{b.vendor.first_name}}{{b.vendor.last_name}}</td>
+                                <td>{{b.gst}}</td>
+                                <td>{{b.tax}}</td>
+                                <td>{{b.amount}}</td>
                             </tr>
                             {% endfor %}
 
@@ -497,7 +498,7 @@
                     </table>
                 </section>
 
-                <section class="balance-info p-5">
+                {% comment %} <section class="balance-info p-5">
                     <div class="row">
                         <div class="col-8 btn-group">
                             <!-- <p class="m-0 font-weight-bold" style="color: black;"> Note: </p>
@@ -542,7 +543,7 @@
                             </table>
                         </div>
                     </div>
-                </section>
+                </section> {% endcomment %}
 
             </div>
 
@@ -552,7 +553,7 @@
 
                 <h3 class="mb-0 mx-5 text-muted" style="color: rgb(161, 195, 226);">{{ company.company_name }}</h3>
                 <center>
-                    <h2 class="mb-4" style=" color: #434141;">RECURRING BILLS</h2>
+                    <h2 class="mb-4" style=" color: #434141;">RECURRING EXPENSE</h2>
                 </center>
 
                 <div class="row g-0">
@@ -562,7 +563,7 @@
                             <div class="d-flex justify-content-between align-items-center mb-5">
                                 <b>
                                     <span style=" color: #434141;">
-                                        ₹ <input type="text" value="{{ recur_bill.grand_total|floatformat:2 }}"
+                                        ₹ <input type="text" value="{{ expense.amount|floatformat:2 }}"
                                             class="amnt text-dark" style="font-size: 18px; color: #434141;">
                                     </span>
                                 </b>
@@ -575,7 +576,7 @@
                                     <h6 class="mb-0 text-grey ">Profile Name :</h6>
                                 </div>
                                 <div class="col-md-6 mt-3">
-                                    <p class="mb-0 " style="font-size: 18px; color: #434141;">{{ recur_bill.profile_name }}</p>
+                                    <p class="mb-0 " style="font-size: 18px; color: #434141;">{{ expense.profile_name }}</p>
                                 </div>
                             </div>
 
@@ -584,7 +585,7 @@
                                     <h6 class="mb-0 text-grey " >Repeat Every :</h6>
                                 </div>
                                 <div class="col-md-6 mt-3">
-                                    <p class="mb-0" style="font-size: 18px; color: #434141;">{{ recur_bill.repeat_every }}</p>
+                                    <p class="mb-0" style="font-size: 18px; color: #434141;">{{ expense.repeat_every }}</p>
                                 </div>
                             </div>
                             <div class="row mb-4 d-flex justify-content-between align-items-center">
@@ -592,7 +593,7 @@
                                     <h6 class="mb-0 text-grey">Start Date :</h6>
                                 </div>
                                 <div class="col-md-6 mt-3">
-                                    <p class="mb-0" style="font-size: 18px; color: #434141;">{{ recur_bill.start_date |date:'d-m-Y' }}</p>
+                                    <p class="mb-0" style="font-size: 18px; color: #434141;">{{ expense.start_date |date:'d-m-Y' }}</p>
                                 </div>
 
                             </div>
@@ -603,7 +604,7 @@
                                     <h6 class="mb-0 text-grey">End Date :</h6>
                                 </div>
                                 <div class="col-md-6 mt-3">
-                                    <p class="mb-0" style="font-size: 18px; color: #434141;">{{ recur_bill.end_date |date:'d-m-Y' }}</p>
+                                    <p class="mb-0" style="font-size: 18px; color: #434141;">{{ expense.ends_on |date:'d-m-Y' }}</p>
                                 </div>
                             </div>
 
@@ -612,7 +613,7 @@
                                     <h6 class="mb-0 text-grey">Payment Terms:</h6>
                                 </div>
                                 <div class="col-md-6 mt-3">
-                                    <p class="mb-0" style="font-size: 18px; color: #434141;"> NET {{ recur_bill.payment_terms }}</p>
+                                    <p class="mb-0" style="font-size: 18px; color: #434141;"> NET {{ expense.payment_terms }}</p>
                                 </div>
                             </div>
 
@@ -622,10 +623,10 @@
                                 </div>
                                 <div class="col-md-6 mt-3">
                                     <span style="font-size: 18px; color: #434141;">{{ gst_or_igst }} - </span>
-                                    {% for bi in tax %}
-                                        <input type="text" value="{{ bi|floatformat:2 }}" style="font-size: 18px; color: #434141; width: 55px;" class="tax 1 tx">
-                                    <span class="text-muted">%</span><br><span style="margin-left: 55px;"></span>
-                                    {% endfor %}
+                                    {% comment %} {% for bi in tax %} {% endcomment %}
+                                        <input type="text" value="{{expense.tax }}" style="font-size: 18px; color: #434141; width: 55px;" class="tax 1 tx">
+                                    <span class="text-muted"></span><br><span style="margin-left: 55px;"></span>
+                                    {% comment %} {% endfor %} {% endcomment %}
                                 </div>
                             </div>
                             <div class="row mb-4 d-flex justify-content-between align-items-center">
@@ -633,7 +634,7 @@
                                     <h6 class="mb-0 text-grey">Source of Supply :</h6>
                                 </div>
                                 <div class="col-md-6 mt-3">
-                                    <p class="mb-0 text-capitalize" style="font-size: 18px; color: #434141;">{{ recur_bill.source_supply }}</p>
+                                    <p class="mb-0 text-capitalize" style="font-size: 18px; color: #434141;">{{ expense.destination }}</p>
                                 </div>
 
                             </div>
@@ -642,7 +643,7 @@
                                     <h6 class="mb-0 text-grey">Note :</h6>
                                 </div>
                                 <div class="col-md-6 mt-3">
-                                    <p class="mb-0 text-capitalize" style="font-size: 18px; color: #434141;">{{ recur_bill.note }}</p>
+                                    <p class="mb-0 text-capitalize" style="font-size: 18px; color: #434141;">{{expense.notes }}</p>
                                 </div>
 
                             </div>
@@ -656,7 +657,7 @@
                                     <h5 style="color: #ccc;">Vendor :</h5>
                                 </div><br>
                                 <div class="col-md-12 my-0 mx-5">
-                                    <h6 class="text-capitalize" style="color: azure;">{{ vendor_name }}</h6>
+                                    <h6 class="text-capitalize" style="color: azure;">{{ vendor.first_name}}{{ vendor.last_name}}</h6>
                                 </div>
                             </div>
                             <div class="d-block justify-content-between mb-5">
@@ -664,7 +665,7 @@
                                     <h5 style="color: #ccc;">Customer :</h5>
                                 </div><br>
                                 <div class="col-md-12 my-0 mx-5">
-                                    <h6 class="text-capitalize " style="color: azure;">{{ customer_name }}
+                                    <h6 class="text-capitalize " style="color: azure;">{{ customer.Firstname }}{{customer.Lastname}}
                                     </h6>
                                 </div>
                             </div>
@@ -672,57 +673,57 @@
                             <hr class="my-4">
 
                             <div class="d-flex justify-content-between mb-5">
-                                <div class="col-md-5 mt-3">
-                                    <h6 style="color: #ccc;">Subtotal :</h5><br>
+                                <div class="col-md-5 mt-2">
+                                    <h6 style="color: #ccc;">GST Treatment:</h5><br>
                                 </div>
-                                <div class="col-md-7 mt-3 mx-3">
-                                    <input type="text" value="{{ recur_bill.sub_total|floatformat:2 }} INR" class="amnt"
-                                        style="font-size: 16px; color: azure;" readonly>
+                                <div class="col-md-7 mt-4 mx-4">
+                                    <input type="text" value="{{ expense.gst_treatment }} " class="amnt"
+                                        style="font-size: 14px; color: azure;" readonly>
                                 </div>
                             </div>
                             <div class="justify-content-between mb-5 d-none" id="igst">
                                 <div class="col-md-4 mt-3">
-                                    <h6 style="color: #ccc;">IGST :</h5><br>
+                                    <h6 style="color: #ccc;">GST Number :</h5><br>
                                 </div>
-                                <div class="col-md-8 mt-3 mx-3">
-                                    <input type="text" value="{{ recur_bill.igst|floatformat:2 }} INR" class="amnt"
+                                <div class="col-md-8 mt-4 mx-3">
+                                    <input type="text" value="{{ expense.gst }} " class="amnt"
                                         style="font-size: 16px; color: azure;" readonly>
                                 </div>
                             </div>
-                            <div class=" justify-content-between mb-5 d-none" id="cgst">
+                            {% comment %} <div class=" justify-content-between mb-5 d-none" id="cgst">
                                 <div class="col-md-4 mt-3">
-                                    <h6 style="color: #ccc;">CGST :</h5><br>
+                                    <h6 style="color: #ccc;">Paid Through :</h5><br>
                                 </div>
                                 <div class="col-md-8 mt-3 mx-3">
-                                    <input type="text" value="{{ recur_bill.cgst|floatformat:2 }} INR" class="amnt"
+                                    <input type="text" value="{{ expense.paidthrough }} " class="amnt"
                                         style="font-size: 16px; color: azure;" readonly>
                                 </div>
                             </div>
                             <div class=" justify-content-between mb-5  d-none" id="sgst">
                                 <div class="col-md-4 mt-3">
-                                    <h6 style="color: #ccc;">SGST :</h5><br>
+                                    <h6 style="color: #ccc;">Paid Through  :</h5><br>
                                 </div>
                                 <div class="col-md-8 mt-3 mx-3">
-                                    <input type="text" value="{{ recur_bill.sgst|floatformat:2 }} INR" class="amnt"
+                                    <input type="text" value="{{ expense.paidthrough }}" class="amnt"
                                         style="font-size: 16px; color: azure;" readonly>
                                 </div>
-                            </div>
+                            </div> {% endcomment %}
                             <div class="d-flex justify-content-between mb-5">
                                 <div class="col-md-8 mt-3">
-                                    <h6 style="color: #ccc;">Shipping Charge :</h5><br>
+                                    <h6 style="color: #ccc;">Paid Through :</h5><br>
                                 </div>
                                 <div class="col-md-4 mt-3 mx-3">
-                                    <input type="text" value="{{ recur_bill.shipping_charge }} INR" class="amnt"
+                                    <input type="text" value="{{ expense.paidthrough }} " class="amnt"
                                         style="font-size: 16px; color: azure;" readonly>
                                 </div>
                             </div>
 
                             <div class="d-flex justify-content-between mb-5">
                                 <div class="col-md-6 mt-3">
-                                    <h6 style="color: #ccc;">Grand Total :</h5><br>
+                                    <h6 style="color: #ccc;">Expense Type:</h5><br>
                                 </div>
                                 <div class="col-md-6 mt-3 mx-3">
-                                    <input type="text" value="{{ recur_bill.grand_total|floatformat:2 }} INR"
+                                    <input type="text" value="{{ expense.expense_type }} "
                                         class="amnt " style="font-size: 16px; color: azure;" readonly>
                                 </div>
                             </div>
@@ -749,14 +750,15 @@
                 </div>
                 <div class="modal-body" style="background: rgb(32, 35, 37); justify-content: center; overflow: hidden;">
                     <div class="card p-0 m-0">
-                        <form action="" method="post" class="needs-validation" novalidate autocomplete="off"
+                        <form action="{% url 'expense_comment' expense.id %}" method="post" class="needs-validation" novalidate autocomplete="off"
                             id="modalComment">
+                            {% csrf_token %}
                             <div class="row mt-2">
-                                <input type="hidden" value="{{recur_bill.id}}" id="com_id">
+                                <input type="hidden" value="{{expense.id}}" id="com_id">
                                 <div class="col-md-6 mt-2">
-                                    {% if recur_bill.comments %}
+                                    {% if expense.comments %}
                                     <textarea class="form-control text-dark bg-light" id="comment" name="comment" required
-                                        style="height: 200px; width: 550px;">{{recur_bill.comments}}</textarea>
+                                        style="height: 200px; width: 550px;">{{expense.comments}}</textarea>
                                     {% else %}
                                     <textarea class="form-control text-dark bg-light" id="comment" name="comment" required
                                         style="height: 200px; width: 550px;"></textarea>
