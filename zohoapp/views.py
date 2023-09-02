@@ -796,10 +796,12 @@ def get_vendor_list(request):
 
 def get_vendor_data(request):
     vendor_id = request.GET.get('vendor')
-    vendor_data = list(vendor_table.objects.filter(id=vendor_id).values('gst_treatment'))
-    print('vendor data',vendor_data)
-    return JsonResponse(vendor_data, safe=False)
-
+    try:
+        vendor = vendor_table.objects.get(id=vendor_id)
+        vendor_data = {'gst_treatment': vendor.gst_treatment}
+    except vendor_table.DoesNotExist:
+        vendor_data = {'error': 'Vendor not found'}
+    return JsonResponse(vendor_data)
       
 
 
@@ -2547,6 +2549,8 @@ def recurringhome(request):
         'gst_treatment':gst_treatment,
         'customers':customers,
     })
+
+@login_required(login_url='login')
 def add_expense(request):
     if request.method == 'POST':
         # Retrieve form data
@@ -2571,6 +2575,7 @@ def add_expense(request):
         notes = request.POST['notes']
         customer_id = request.POST['customername']
         customer_obj = get_object_or_404(customer, pk=customer_id)
+        custname=f"{customer_obj.Firstname} {customer_obj.Lastname}"
 
         # Handle the ends_on field
         ends_on = request.POST.get('ends_on')
@@ -2598,7 +2603,7 @@ def add_expense(request):
             destination=destination,
             tax=tax,
             notes=notes,
-            customername=f"{customer_obj.Firstname} {customer_obj.Lastname}",
+            customer= customer_obj,
             activation_tag="active" # Set the activation_tag to "active"
         )
         expense.save()
@@ -2612,32 +2617,66 @@ def add_expense(request):
 @login_required(login_url='login')
 def recurringbase(request):
     expenses = Expense.objects.all()
+    
     return render(request, 'recurring_base.html',{'expenses': expenses})
 
+
+@login_required(login_url='login')
 def show_recurring(request, expense_id):
     expense = get_object_or_404(Expense, id=expense_id)
     expenses = Expense.objects.all()
+    company = company_details.objects.get(user=request.user)
 
     search_query = request.GET.get('search_query')
     search_date = request.GET.get('search_date')
 
     if search_query:
         expenses = expenses.filter(
-            Q(profile_name_icontains=search_query) | Q(customername_icontains=search_query)
+            Q(profile_name__icontains=search_query) | Q(customername__icontains=search_query)
         )
-    
+
     if search_date:
         expenses = expenses.filter(start_date=search_date)
 
-    if request.method == 'POST':
-        comments = request.POST.get('enter_comment_here', '')
-        Comment.objects.create(profile_name=expense.profile_name, expense=expense, comment=comments)
+    
 
     comments = Comment.objects.filter(profile_name=expense.profile_name, expense=expense)
+    vendor = vendor_table.objects.get(id=expense.vendor_id)
+    customers = customer.objects.get(id=expense.customer_id)
 
-    return render(request, 'show_recurring.html', {'expense': expense, 'expenses': expenses, 'comments': comments})
+    return render(request, 'show_recurring.html', {'expense': expense, 'expenses': expenses, 'comments': comments, 'company': company, 'vendor': vendor, 'customer': customers})
 
 
+@login_required(login_url='login')
+def expense_comment(request, expense_id):
+    expense = get_object_or_404(Expense, id=expense_id)
+
+    if request.method == 'POST':
+        comment_text = request.POST['comment']
+
+        comment = Comment()
+        comment.profile_name = expense.profile_name  # Set profile_name from the related Expense
+        comment.expense = expense  # Set the ForeignKey to the related Expense
+        comment.comment = comment_text
+        comment.save()
+        comments = Comment.objects.filter(profile_name=expense.profile_name, expense=expense)
+
+        # Redirect to the 'show_recurring' view or an appropriate page
+        return redirect('show_recurring', expense_id=expense_id)
+
+    company = company_details.objects.get(user=request.user)
+
+    context = {
+        'expense': expense,
+        'company': company,
+        'comment':comments,
+    }
+
+    return render(request, 'show_recurring.html', context)
+
+
+    
+    
 def expense_details(request):
     expenses = Expense.objects.all()
     return render(request, 'recurring_base.html',{'expenses': expenses})
@@ -5087,21 +5126,21 @@ def export_pdf(request, id):
 
 
 
-@login_required(login_url='login')
-def recurbill_comment(request):
+# @login_required(login_url='login')
+# def recurbill_comment(request):
 
-    company = company_details.objects.get(user = request.user)
+#     company = company_details.objects.get(user = request.user)
 
-    if request.method=='POST':
-        id =request.POST.get('id')
-        cmnt =request.POST.get('comment')
+#     if request.method=='POST':
+#         id =request.POST.get('id')
+#         cmnt =request.POST.get('comment')
         
-        u = User.objects.get(id = request.user.id)
-        r_bill = recurring_bills.objects.get(user = request.user, id = id)
-        r_bill.comments = cmnt
-        r_bill.save()
+#         u = User.objects.get(id = request.user.id)
+#         r_bill = recurring_bills.objects.get(user = request.user, id = id)
+#         r_bill.comments = cmnt
+#         r_bill.save()
 
-        return HttpResponse({"message": "success"})
+#         return HttpResponse({"message": "success"})
 
 @login_required(login_url='login')
 def recurbill_add_file(request,id):
@@ -7049,4 +7088,4 @@ def payment_delete_details(request):
     payment_id = request.GET.get('payment_id')
     payment = get_object_or_404(payment_made_items,id=payment_id)
     payment.delete()
-    return redirect('paymentmethod')    
+    return redirect('paymentmethod')
